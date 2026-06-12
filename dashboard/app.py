@@ -2,21 +2,34 @@ from chatbot import explain_churn
 import streamlit as st
 import pandas as pd
 import joblib
-# Load trained pipeline
+
+# --------------------------
+# Load Model
+# --------------------------
+
 pipeline = joblib.load(
     "models/customer_churn_model.pkl"
 )
 
-st.set_page_config(
-    page_title="Customer Churn Predction",
-    page_icon="📊"
-)
-st.title("📊 Customer Churn Prediction")
-st.write(
-    "Predict whether a telecom customer is likely to churn."
+# --------------------------
+# Page Config
+# --------------------------
 
+st.set_page_config(
+    page_title="Customer Churn Prediction",
+    page_icon="📊",
+    layout="wide"
 )
-#Customer Inputs
+
+st.title("📊 AI-Powered Customer Churn Prediction")
+st.write(
+    "Predict whether a telecom customer is likely to churn and get AI-powered explanations."
+)
+
+# --------------------------
+# Customer Inputs
+# --------------------------
+
 gender = st.selectbox(
     "Gender",
     ["Male", "Female"]
@@ -122,60 +135,79 @@ total_charges = st.number_input(
 )
 
 # --------------------------
-# Prediction Button
+# Predict Button
 # --------------------------
 
 if st.button("Predict Churn"):
 
     customer = pd.DataFrame({
-        "gender":[gender],
-        "SeniorCitizen":[senior],
-        "Partner":[partner],
-        "Dependents":[dependents],
-        "tenure":[tenure],
-        "PhoneService":[phone_service],
-        "MultipleLines":[multiple_lines],
-        "InternetService":[internet_service],
-        "OnlineSecurity":[online_security],
-        "OnlineBackup":[online_backup],
-        "DeviceProtection":[device_protection],
-        "TechSupport":[tech_support],
-        "StreamingTV":[streaming_tv],
-        "StreamingMovies":[streaming_movies],
-        "Contract":[contract],
-        "PaperlessBilling":[paperless_billing],
-        "PaymentMethod":[payment_method],
-        "MonthlyCharges":[monthly_charges],
-        "TotalCharges":[total_charges]
+        "gender": [gender],
+        "SeniorCitizen": [senior],
+        "Partner": [partner],
+        "Dependents": [dependents],
+        "tenure": [tenure],
+        "PhoneService": [phone_service],
+        "MultipleLines": [multiple_lines],
+        "InternetService": [internet_service],
+        "OnlineSecurity": [online_security],
+        "OnlineBackup": [online_backup],
+        "DeviceProtection": [device_protection],
+        "TechSupport": [tech_support],
+        "StreamingTV": [streaming_tv],
+        "StreamingMovies": [streaming_movies],
+        "Contract": [contract],
+        "PaperlessBilling": [paperless_billing],
+        "PaymentMethod": [payment_method],
+        "MonthlyCharges": [monthly_charges],
+        "TotalCharges": [total_charges]
     })
 
     prediction = pipeline.predict(customer)
-
     probability = pipeline.predict_proba(customer)
 
-    churn_probability = probability[0][1]
+    st.session_state.customer = customer
+    st.session_state.prediction = prediction[0]
+    st.session_state.churn_probability = probability[0][1]
+
+# --------------------------
+# Show Prediction
+# --------------------------
+
+if "prediction" in st.session_state:
+
+    churn_probability = st.session_state.churn_probability
 
     st.subheader("Prediction Result")
 
-    if prediction[0] == 1:
+    if st.session_state.prediction == 1:
+
         st.error(
             f"⚠ Customer likely to churn ({churn_probability:.2%})"
         )
+
     else:
+
         st.success(
-            f"✅ Customer likely to stay ({1-churn_probability:.2%})"
+            f"✅ Customer likely to stay ({1 - churn_probability:.2%})"
         )
 
     st.write(
         f"Churn Probability: {churn_probability:.2%}"
     )
+
+    # --------------------------
+    # Gemini Explanation
+    # --------------------------
+
     if st.button("🤖 Explain Prediction"):
 
         with st.spinner("Analyzing customer..."):
 
-           explanation = explain_churn(
-               customer.to_dict(),
-               churn_probability
-        )
+            explanation = explain_churn(
+                st.session_state.customer.to_dict(),
+                st.session_state.churn_probability
+            )
 
-           st.markdown(explanation)
+            st.markdown("## 🤖 AI Explanation")
+
+            st.write(explanation)

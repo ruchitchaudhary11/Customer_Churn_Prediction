@@ -28,7 +28,7 @@ def explain_churn(customer_data, churn_probability):
     """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.5-flash-lite",
         contents=prompt
     )
 
