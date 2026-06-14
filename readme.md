@@ -42,7 +42,7 @@ Users can enter customer information and instantly receive:
 * Scikit-Learn
 * XGBoost
 * Pandas
-* NumPy
+* Numpy
 
 ### Dashboard
 
